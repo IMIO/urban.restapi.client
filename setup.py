@@ -39,6 +39,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'setuptools',
+        'requests',
     ],
     extras_require={
         'test': [
@@ -46,7 +47,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'load_config_script = urban.restapi.client.script.urban_configuration:main',
+            'import_contacts = urban.restapi.client.script.importcontacts:main',
         ],
     },
 )
