@@ -61,7 +61,6 @@ class ImportContacts:
 
     def execute(self):
         title_mapping = VALUES_MAPS.get('title_map')
-        csv.QUOTE_NONE
         with open(self.csv_file, 'r', 1024, 'utf-8') as file:
             reader = csv.DictReader(file, quoting=csv.QUOTE_NONE, **self.config._sections['csv'])
             for idx, line in enumerate(reader):
