@@ -16,11 +16,14 @@ RESPONSE_CREATED_SUCCESS = 201
 VALUES_MAPS = {
     'title_map': {
         'Monsieur': 'mister',
+        'M.': 'mister',
         'Messieurs': 'misters',
         'Madame': 'madam',
         'Mesdames': 'ladies',
         'Mademoiselle': 'miss',
         'M. et Mme': 'madam_and_mister',
+        'Monsieur et Madame': 'madam_and_mister',
+        'Maître': 'master',
     },
 
     'country_map': {
@@ -61,6 +64,7 @@ class ImportContacts:
 
     def execute(self):
         title_mapping = VALUES_MAPS.get('title_map')
+        country_mapping = VALUES_MAPS.get('country_map')
         with open(self.csv_file, 'r', 1024, 'utf-8') as file:
             reader = csv.DictReader(file, quoting=csv.QUOTE_NONE, **self.config._sections['csv'])
             for idx, line in enumerate(reader):
@@ -91,7 +95,7 @@ class ImportContacts:
                               line['E-mail'],
                               line['Fax'],
                               line['Ville'],
-                              title_mapping.get(line['Pays']),
+                              country_mapping.get(line['Pays']),
                               line['Téléphone'],
                               title_mapping.get(line['Titre']),
                               )
@@ -137,7 +141,7 @@ class ImportContacts:
                               line['E-mail'],
                               line['Fax'],
                               line['Ville'],
-                              title_mapping.get(line['Pays']),
+                              country_mapping.get(line['Pays']),
                               line['Téléphone'],
                               title_mapping.get(line['Titre']),
                               )
@@ -145,7 +149,6 @@ class ImportContacts:
                 response = requests.post(self.host + '/urban/%s' % self.path_type,
                                          headers=self.head,
                                          data=data)
-
                 if response.status_code != RESPONSE_CREATED_SUCCESS:
                     print(response.status_code)
                     break
@@ -158,7 +161,6 @@ def main():
     # bin/import_contacts configuration_example.cfg Geometrician geometricians var/urban/geo.csv
     # bin/import_contacts configuration_example.cfg Architect architects var/urban/architects.csv --limit 2
     # bin/import_contacts configuration_example.cfg Notary notaries var/urban/notaires.csv --limit 100
-
     parser = argparse.ArgumentParser(description="Import contact from csv file")
     parser.add_argument("config_file", type=str, help="path to the config")
     parser.add_argument("portal_type", type=str, help="contact portal type")
