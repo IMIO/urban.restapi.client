@@ -2,6 +2,8 @@
 
 
 # from urban.restapi.client import utils
+from datetime import datetime
+
 from urban.restapi.client.utils import format_path
 
 import argparse
@@ -16,14 +18,21 @@ RESPONSE_CREATED_SUCCESS = 201
 VALUES_MAPS = {
     'title_map': {
         'Monsieur': 'mister',
+        'Monsieur l\'Architecte': 'mister',
         'M.': 'mister',
         'Messieurs': 'misters',
         'Madame': 'madam',
+        'Madame l\'Architecte': 'madam',
         'Mesdames': 'ladies',
-        'Mademoiselle': 'miss',
-        'M. et Mme': 'madam_and_mister',
+        'Mesdames, Messieurs': 'madam_and_mister',
+        'Mademoiselle': 'madam',
+        'Madame, Monsieur': 'madam_and_mister',
         'Monsieur et Madame': 'madam_and_mister',
-        'Maître': 'master',
+        'la SPRL': '',
+        'S.A.': '',
+        'SPRL': '',
+        'Association momentanée': '',
+        "Bureau d\'étude": '',
     },
 
     'country_map': {
@@ -48,7 +57,6 @@ class ImportContacts:
         self.limit = limit
         self.plone_site = ('{host}/{site}'.format(**config._sections['plone']))
         self.host = config._sections['plone']['host']
-
         response = requests.post(self.host + '/@login',
                                  headers={'Accept': 'application/json',
                                           'Content-Type': "application/json;charset=utf-8"},
@@ -65,8 +73,8 @@ class ImportContacts:
     def execute(self):
         title_mapping = VALUES_MAPS.get('title_map')
         country_mapping = VALUES_MAPS.get('country_map')
-        with open(self.csv_file, 'r', 1024, 'utf-8') as file:
-            reader = csv.DictReader(file, quoting=csv.QUOTE_NONE, **self.config._sections['csv'])
+        with open(self.csv_file, 'r', 1024, 'utf-8-sig') as file:
+            reader = csv.DictReader(file, quoting=csv.QUOTE_ALL, **self.config._sections['csv'])
             for idx, line in enumerate(reader):
                 if self.limit and (self.limit - 1) < idx:
                     print("Specified limit reached: %i" % self.limit)
@@ -75,53 +83,58 @@ class ImportContacts:
                     data = '{"@type": "%s", ' \
                            '"name1": "%s", ' \
                            '"name2": "%s", ' \
-                           '"society": "%s", ' \
                            '"street": "%s", ' \
                            '"zipcode": "%s", ' \
                            '"gsm": "%s", ' \
                            '"email": "%s", ' \
                            '"fax": "%s", ' \
                            '"city": "%s", '\
-                           '"country": "%s", '\
                            '"phone": "%s", ' \
                            '"personTitle": "%s"}'\
                            % (self.portal_type,
                               line['Nom'],
                               line['Prenom'],
-                              line['Bureau'],
-                              line['Rue+No'],
-                              line['CP'],
+                              line['Adresse'],
+                              line['CodePostal'],
                               line['Gsm'],
-                              line['E-mail'],
+                              line['Email'],
                               line['Fax'],
-                              line['Ville'],
-                              country_mapping.get(line['Pays']),
-                              line['Téléphone'],
-                              title_mapping.get(line['Titre']),
+                              # line['Matricule'],
+                              line['Localite'],
+                              # country_mapping.get(line['Pays']),
+                              line['Telephone'],
+                              title_mapping.get(line['Civilite']),
                               )
                 elif self.portal_type == 'Notary':
                     data = '{"@type": "%s", ' \
                            '"name1": "%s", ' \
                            '"name2": "%s", ' \
+                           '"society": "%s", ' \
                            '"street": "%s", ' \
+                           '"number": "%s", ' \
                            '"zipcode": "%s", ' \
                            '"fax": "%s", ' \
+                           '"email": "%s", ' \
                            '"city": "%s", '\
-                           '"phone": "%s"}' \
+                           '"phone": "%s", ' \
+                           '"personTitle": "%s"}' \
                            % (self.portal_type,
                               line['Nom'],
                               line['Prenom'],
-                              line['Adresse1'],
-                              line['Code_postal'],
+                              line['Bureau'],
+                              line['Rue'],
+                              line['No'],
+                              line['CP'],
                               line['Fax'],
+                              line['E-mail'],
                               line['Ville'],
-                              line['Telephone'],
+                              line['Téléphone'],
+                              title_mapping.get(line['Titre']),
                               )
                 elif self.portal_type == 'Geometrician':
                     data = '{"@type": "%s", ' \
                            '"name1": "%s", ' \
                            '"name2": "%s", ' \
-                           '"society": "%s", ' \
                            '"street": "%s", ' \
                            '"zipcode": "%s", ' \
                            '"gsm": "%s", ' \
@@ -134,7 +147,7 @@ class ImportContacts:
                            % (self.portal_type,
                               line['Nom'],
                               line['Prénom'],
-                              line['Bureau'],
+                              # line['Bureau'],
                               line['Rue+No'],
                               line['CP'],
                               line['Gsm'],
@@ -145,6 +158,33 @@ class ImportContacts:
                               line['Téléphone'],
                               title_mapping.get(line['Titre']),
                               )
+                elif self.portal_type == 'Parcelling':
+                    # changes_description = {
+                    #                          'data': "{0}{1}{2}".format("<p>", line['changesDescription'], "</p>"),
+                    #                          'content-type': 'text/html'
+                    #                       },
+                    # number_of_parcels = int(line['NOMBRE DE LOTS'])
+                    number_of_parcels = "0"
+                    approval_date = self.inverte_day_month(line["DATE_DE_DE"])
+                    authorization_date = self.inverte_day_month(line["DATE_STATU"])
+                    data = '{"@type": "%s", ' \
+                           '"label": "%s", ' \
+                           '"subdividerName": "%s", ' \
+                           '"authorizationDate": "%s", ' \
+                           '"approvalDate": "%s", ' \
+                           '"communalReference": "%s", ' \
+                           '"numberOfParcels": "%s", ' \
+                           '"changesDescription": "%s"}' \
+                           % (self.portal_type,
+                              line['CODE_ADMIN'],
+                              line['CODE_ADMIN'],
+                              authorization_date,
+                              approval_date,
+                              line['CODEUNIQUE'],
+                              number_of_parcels,
+                              "{0}{1}{2}".format("<p>", line['STATUT'], "</p>")
+                              # "{0}{1}{2}".format("<p>", line['MODIFICATIONS DU LOTISSEMENT'], "</p>"),
+                              )
                 data = data.encode("utf-8")
                 response = requests.post(self.host + '/urban/%s' % self.path_type,
                                          headers=self.head,
@@ -152,6 +192,14 @@ class ImportContacts:
                 if response.status_code != RESPONSE_CREATED_SUCCESS:
                     print(response.status_code)
                     break
+
+    def inverte_day_month(self, date):
+        if date:
+            try:
+                obj_date = datetime.strptime(date.strip(), '%d/%m/%Y')
+                return datetime.strftime(obj_date, '%Y-%m-%d')
+            except ValueError:
+                return
 
 
 def main():
