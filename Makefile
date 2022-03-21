@@ -7,9 +7,8 @@ all: run
 
 .PHONY: bootstrap
 bootstrap:
-	virtualenv -p python3.6 .
+	virtualenv -p python3 .
 	bin/pip install -r requirements.txt
-	./bin/python3.6 bootstrap.py
 
 .PHONY: buildout
 buildout:
