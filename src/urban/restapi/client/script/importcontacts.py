@@ -164,6 +164,9 @@ class ImportContacts:
                     #                          'content-type': 'text/html'
                     #                       },
                     # number_of_parcels = int(line['NOMBRE DE LOTS'])
+                    if not(line["DATE_DE_DE"] and line["DATE_STATU"]):
+                        # ignore parcelling without date
+                        continue
                     number_of_parcels = "0"
                     approval_date = self.inverte_day_month(line["DATE_DE_DE"])
                     authorization_date = self.inverte_day_month(line["DATE_STATU"])
@@ -174,6 +177,7 @@ class ImportContacts:
                            '"approvalDate": "%s", ' \
                            '"communalReference": "%s", ' \
                            '"numberOfParcels": "%s", ' \
+                           '"DGO4Reference": "%s", ' \
                            '"changesDescription": "%s"}' \
                            % (self.portal_type,
                               line['CODE_ADMIN'],
@@ -182,6 +186,7 @@ class ImportContacts:
                               approval_date,
                               line['CODEUNIQUE'],
                               number_of_parcels,
+                              line['CODE_ADMIN'],
                               "{0}{1}{2}".format("<p>", line['STATUT'], "</p>")
                               # "{0}{1}{2}".format("<p>", line['MODIFICATIONS DU LOTISSEMENT'], "</p>"),
                               )
@@ -191,6 +196,7 @@ class ImportContacts:
                                          data=data)
                 if response.status_code != RESPONSE_CREATED_SUCCESS:
                     print(response.status_code)
+                    print(response.text)
                     break
 
     def inverte_day_month(self, date):
