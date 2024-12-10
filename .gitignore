@@ -23,3 +23,6 @@ output.xml
 /lib/
 /venv/
 /share/
+pyenv.cfg
+*.code-workspace
+lotissements_*.csv
