@@ -164,7 +164,7 @@ class ImportContacts:
                     #                          'content-type': 'text/html'
                     #                       },
                     # number_of_parcels = int(line['NOMBRE DE LOTS'])
-                    if not(line["DATE_DE_DE"] and line["DATE_STATU"]):
+                    if not (line["DATE_DE_DE"] and line["DATE_STATU"]):
                         # ignore parcelling without date
                         continue
                     number_of_parcels = "0"
